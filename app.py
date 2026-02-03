@@ -153,7 +153,7 @@ def creator_page():
 
     # Use session state to store the base URL
     if 'base_url' not in st.session_state:
-        st.session_state['base_url'] = "http://localhost:8501"
+        st.session_state['base_url'] = "https://will-you-be-my-valentine.streamlit.app/"
 
     tabs = st.tabs(["✨ Create New", "📜 Sent Requests", "⚙️ Settings"])
     
