@@ -139,8 +139,18 @@ def get_all_proposals():
 def creator_page():
     st.markdown("<h1>Valentine's Proposal Maker</h1>", unsafe_allow_html=True)
     
-    tabs = st.tabs(["✨ Create New", "📜 Sent Requests"])
+    # Try to guess the base URL
+    default_url = "http://localhost:8501"
     
+    tabs = st.tabs(["✨ Create New", "📜 Sent Requests", "⚙️ Settings"])
+    
+    with tabs[2]:
+        st.markdown("<h3>App Settings</h3>", unsafe_allow_html=True)
+        base_url = st.text_input("Deploy URL", value=st.session_state.get('base_url', default_url), 
+                                help="Once you deploy this app (e.g. to Streamlit Cloud), paste the public URL here.")
+        st.session_state['base_url'] = base_url
+        st.info("💡 This URL is used to generate the shareable links for your Valentines.")
+
     with tabs[0]:
         st.markdown('<div class="proposal-card">', unsafe_allow_html=True)
         sender = st.text_input("From (Your Name)", placeholder="e.g. your secret admirer")
@@ -152,7 +162,8 @@ def creator_page():
                 img_b64 = get_image_base64(uploaded_file)
                 proposal_id = save_proposal(sender, recipient, img_b64)
                 
-                valentine_link = f"http://localhost:8501/?proposal_id={proposal_id}"
+                current_base = st.session_state.get('base_url', default_url).rstrip('/')
+                valentine_link = f"{current_base}/?proposal_id={proposal_id}"
                 
                 st.success("Proposal Created! Share the love:")
                 st.code(valentine_link, language=None)
@@ -167,12 +178,13 @@ def creator_page():
         if not proposals:
             st.info("You haven't sent any requests yet. Start your journey in the 'Create New' tab!")
         else:
+            current_base = st.session_state.get('base_url', default_url).rstrip('/')
             for s, r, response, pid in proposals:
                 status_emoji = "💖" if response == 'yes' else "⏳"
                 with st.expander(f"To: {r} {status_emoji}"):
                     st.write(f"**From:** {s}")
                     st.write(f"**Status:** {response.upper()}")
-                    st.write(f"**Link:** `http://localhost:8501/?proposal_id={pid}`")
+                    st.write(f"**Link:** `{current_base}/?proposal_id={pid}`")
 
 def recipient_page(proposal_id):
     data = get_proposal(proposal_id)
