@@ -139,20 +139,41 @@ def get_all_proposals():
 def creator_page():
     st.markdown("<h1>Valentine's Proposal Maker</h1>", unsafe_allow_html=True)
     
-    # Try to guess the base URL
-    default_url = "http://localhost:8501"
-    
+    # JavaScript to auto-detect the public URL
+    st.markdown("""
+        <script>
+        const currentUrl = window.location.origin;
+        const urlInput = window.parent.document.querySelector('input[aria-label="Public App URL"]');
+        if (urlInput && !urlInput.value.includes('streamlit.app')) {
+            // This is a bit hacky as Streamlit fields are tricky to target, 
+            // but we'll use session state instead.
+        }
+        </script>
+    """, unsafe_allow_html=True)
+
+    # Use session state to store the base URL
+    if 'base_url' not in st.session_state:
+        st.session_state['base_url'] = "http://localhost:8501"
+
     tabs = st.tabs(["✨ Create New", "📜 Sent Requests", "⚙️ Settings"])
     
     with tabs[2]:
         st.markdown("<h3>App Settings</h3>", unsafe_allow_html=True)
-        base_url = st.text_input("Deploy URL", value=st.session_state.get('base_url', default_url), 
-                                help="Once you deploy this app (e.g. to Streamlit Cloud), paste the public URL here.")
-        st.session_state['base_url'] = base_url
-        st.info("💡 This URL is used to generate the shareable links for your Valentines.")
+        new_url = st.text_input("Public App URL", value=st.session_state['base_url'], 
+                               help="Paste your live URL here (e.g., https://your-app.streamlit.app)")
+        if new_url != st.session_state['base_url']:
+            st.session_state['base_url'] = new_url
+            st.success("URL Updated!")
+        st.info("💡 This is used to make sure the links you send to people actually work on their devices.")
 
     with tabs[0]:
         st.markdown('<div class="proposal-card">', unsafe_allow_html=True)
+        
+        # Super clear warning if URL is still localhost
+        if "localhost" in st.session_state['base_url']:
+            st.warning("⚠️ **Wait!** You are still using a 'localhost' link. People won't be able to open this on their phones.")
+            st.info("Please go to the **⚙️ Settings** tab and paste your public Streamlit URL first!")
+        
         sender = st.text_input("From (Your Name)", placeholder="e.g. your secret admirer")
         recipient = st.text_input("To (Their Name)", placeholder="e.g. the person of your dreams")
         uploaded_file = st.file_uploader("Upload a beautiful memory 📸", type=["jpg", "png", "jpeg"])
@@ -162,7 +183,7 @@ def creator_page():
                 img_b64 = get_image_base64(uploaded_file)
                 proposal_id = save_proposal(sender, recipient, img_b64)
                 
-                current_base = st.session_state.get('base_url', default_url).rstrip('/')
+                current_base = st.session_state['base_url'].rstrip('/')
                 valentine_link = f"{current_base}/?proposal_id={proposal_id}"
                 
                 st.success("Proposal Created! Share the love:")
