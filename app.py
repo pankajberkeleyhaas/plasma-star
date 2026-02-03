@@ -199,7 +199,7 @@ def creator_page():
         if not proposals:
             st.info("You haven't sent any requests yet. Start your journey in the 'Create New' tab!")
         else:
-            current_base = st.session_state.get('base_url', default_url).rstrip('/')
+            current_base = st.session_state['base_url'].rstrip('/')
             for s, r, response, pid in proposals:
                 status_emoji = "💖" if response == 'yes' else "⏳"
                 with st.expander(f"To: {r} {status_emoji}"):
